@@ -7,7 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CustomerProfileController;
 use App\Http\Controllers\SearchController;
-use App\Http\Controllers\CustomerController; // Import CustomerController
+use App\Http\Controllers\CustomerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,19 +20,23 @@ use App\Http\Controllers\CustomerController; // Import CustomerController
 |
 */
 
-// Route::get('/', function () {
-//     return view('welcome');
-// });
+// Home page displaying items using the shop view:
 Route::get('/', [ItemController::class, 'getItems'])->name('getItems');
+
+// Cart routes
 Route::get('add-to-cart/{id}', [ItemController::class, 'addToCart'])->name('addToCart');
 Route::get('/shopping-cart', [ItemController::class, 'getCart'])->name('getCart');
-
 Route::get('/reduce/{id}', [ItemController::class, 'getReduceByOne'])->name('reduceByOne');
 Route::get('/remove/{id}', [ItemController::class, 'getRemoveItem'])->name('removeItem');
 Route::get('/checkout', [ItemController::class, 'postCheckout'])->name('checkout')->middleware('auth');
 
+// Import route
 Route::post('/items-import', [ItemController::class, 'import'])->name('item.import');
+
+// Public Items resource route (if needed for customer-facing CRUD)
 Route::resource('items', ItemController::class);
+
+// Other routes
 Route::get('/logout', [UserController::class, 'logout'])->name('user.logout');
 
 Route::prefix('admin')->group(function () {
@@ -41,8 +45,11 @@ Route::prefix('admin')->group(function () {
     Route::get('/order/{id}', [OrderController::class, 'processOrder'])->name('admin.orderDetails');
     Route::post('/order/{id}', [OrderController::class, 'orderUpdate'])->name('admin.orderUpdate');
 
-    // Add update route for users. This route handles PUT requests.
+    // Update route for users (PUT request).
     Route::put('/users/{id}', [UserController::class, 'update_role'])->name('users.update');
+
+    // New admin route for managing items (using DataTables)
+    Route::get('/items', [ItemController::class, 'index'])->name('admin.items');
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
@@ -51,26 +58,27 @@ Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-// Override the default home route if needed
+// Override the default home route if needed.
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-// Define a route for the customer profile creation form using CustomerController's create() method
+// Customer profile routes
 Route::get('/customerprofile/create', [CustomerController::class, 'create'])
     ->name('customerprofile.create')
     ->middleware('auth');
 
-// Define a route for storing the customer profile using CustomerController's store() method
 Route::post('/customerprofile', [CustomerController::class, 'store'])
     ->name('customerprofile.store')
     ->middleware('auth');
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-// Define a search route for GET requests
+// Search route
 Route::get('/search', [SearchController::class, 'search'])->name('search');
 
-// ***** NEW ROUTE: Show Customer Profile *****
-// This route is used by the Customer model's getSearchResult() method.
+// New route: Show Customer Profile (used by Customer model's getSearchResult method)
 Route::get('/customers/{customer}', [CustomerController::class, 'show'])
     ->name('customers.show')
     ->middleware('auth');
+
+    Route::delete('items/{item_id}/images/{image_id}', [\App\Http\Controllers\ItemController::class, 'destroyImage'])
+    ->name('items.images.destroy');
