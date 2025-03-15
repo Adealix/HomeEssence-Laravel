@@ -28,6 +28,7 @@ class Customer extends Model implements Searchable
         'town',
         'zipcode',
         'phone',
+        'profile_picture',
         'user_id',
     ];
 

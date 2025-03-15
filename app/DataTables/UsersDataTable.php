@@ -8,11 +8,8 @@ use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
-use Yajra\DataTables\Html\Editor\Editor;
-use Yajra\DataTables\Html\Editor\Fields;
 use Yajra\DataTables\Services\DataTable;
 use Auth;
-use DB;
 
 class UsersDataTable extends DataTable
 {
@@ -23,27 +20,31 @@ class UsersDataTable extends DataTable
      */
     public function dataTable($query)
     {
-        return datatables()->query($query)
+        return datatables()->eloquent($query)
             ->addColumn('role', function ($row) {
-                // This view should now have access to $row->role
+                // This view now has access to both $row->role and $row->status if needed.
                 return view('users.role', compact('row'));
             })
-            ->rawColumns(['role'])
+            ->addColumn('status', function ($row) {
+                // Render the status dropdown (status.blade.php)
+                return view('users.status', compact('row'));
+            })
+            ->rawColumns(['role', 'status'])
             ->setRowId('id');
     }
 
     /**
      * Get the query source of dataTable.
      */
-    public function query()
+    public function query(): QueryBuilder
     {
-        $users = DB::table('users')
-            ->join('customer', 'users.id', '=', 'customer.user_id')
+        $users = User::join('customer', 'users.id', '=', 'customer.user_id')
             ->select(
                 'users.id AS id',
                 'users.name',
                 'users.email',
-                'users.role', // Added role column from the users table
+                'users.role',      // role column from users table
+                'users.status',    // status column from users table
                 'customer.addressline',
                 'customer.phone',
                 'users.created_at'
@@ -54,7 +55,7 @@ class UsersDataTable extends DataTable
     }
 
     /**
-     * Optional method if you want to use the html builder.
+     * Optional method if you want to use the HTML builder.
      */
     public function html(): HtmlBuilder
     {
@@ -76,13 +77,18 @@ class UsersDataTable extends DataTable
     public function getColumns(): array
     {
         return [
-            Column::make('id')->title('customer id'),
+            Column::make('id')->title('Customer ID'),
             Column::make('name'),
             Column::make('email'),
-            Column::make('addressline')->title('address')->searchable(false),
+            Column::make('addressline')->title('Address')->searchable(false),
             Column::make('phone')->searchable(false),
             Column::make('created_at'),
             Column::computed('role')
+                ->exportable(false)
+                ->printable(false)
+                ->width(200)
+                ->addClass('text-center'),
+            Column::computed('status')
                 ->exportable(false)
                 ->printable(false)
                 ->width(200)

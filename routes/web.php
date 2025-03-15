@@ -45,7 +45,7 @@ Route::prefix('admin')->group(function () {
     Route::get('/order/{id}', [OrderController::class, 'processOrder'])->name('admin.orderDetails');
     Route::post('/order/{id}', [OrderController::class, 'orderUpdate'])->name('admin.orderUpdate');
 
-    // Update route for users (PUT request).
+    // Update route for users (PUT request)
     Route::put('/users/{id}', [UserController::class, 'update_role'])->name('users.update');
 
     // New admin route for managing items (using DataTables)
@@ -54,20 +54,31 @@ Route::prefix('admin')->group(function () {
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
-Auth::routes();
+// Enable authentication routes with email verification enabled
+Auth::routes(['verify' => true]);
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 // Override the default home route if needed.
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-// Customer profile routes
+// Customer profile routes for creation
 Route::get('/customerprofile/create', [CustomerController::class, 'create'])
     ->name('customerprofile.create')
     ->middleware('auth');
 
 Route::post('/customerprofile', [CustomerController::class, 'store'])
     ->name('customerprofile.store')
+    ->middleware('auth');
+
+// New routes for editing and updating the customer profile.
+// These routes will use the same form for editing the profile.
+Route::get('/customerprofile/edit', [CustomerController::class, 'edit'])
+    ->name('customerprofile.edit')
+    ->middleware('auth');
+
+Route::put('/customerprofile', [CustomerController::class, 'update'])
+    ->name('customerprofile.update')
     ->middleware('auth');
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
@@ -80,5 +91,6 @@ Route::get('/customers/{customer}', [CustomerController::class, 'show'])
     ->name('customers.show')
     ->middleware('auth');
 
-    Route::delete('items/{item_id}/images/{image_id}', [\App\Http\Controllers\ItemController::class, 'destroyImage'])
+// Route to delete a product image
+Route::delete('items/{item_id}/images/{image_id}', [\App\Http\Controllers\ItemController::class, 'destroyImage'])
     ->name('items.images.destroy');

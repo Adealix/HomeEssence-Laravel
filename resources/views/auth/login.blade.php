@@ -11,6 +11,9 @@
                 <div class="card-body">
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
+                        
+                        <!-- Hidden field to send status (optional, as server-side check is what really matters) -->
+                        <input type="hidden" name="status" value="active">
 
                         <div class="row mb-3">
                             <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>

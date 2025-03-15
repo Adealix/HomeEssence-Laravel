@@ -46,21 +46,47 @@ class UserController extends Controller
     }
 
     /**
-     * Update user role.
+     * Update user role and status.
+     *
+     * This method is used by the admin to update a user's role (user/admin) and status (active/inactive).
      *
      * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id  The ID of the user to update.
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function updateRole(Request $request)
+    public function updateRole(Request $request, $id)
+{
+    $user = User::findOrFail($id);
+
+    // Use the current value if the input is missing
+    $role = $request->input('role', $user->role);
+    $status = $request->input('status', $user->status);
+
+    // Merge the current values into the request so that validation finds both keys
+    $request->merge(['role' => $role, 'status' => $status]);
+
+    // Validate the merged data
+    $request->validate([
+        'role'   => 'required|string',
+        'status' => 'required|string|in:active,inactive',
+    ]);
+
+    $user->update([
+        'role'   => $role,
+        'status' => $status,
+    ]);
+
+    return redirect()->back()->with('success', 'User role and status updated successfully.');
+}
+
+    
+
+    /**
+     * Alias method to support update_role route if needed.
+     */
+    public function update_role(Request $request, $id)
     {
-        $request->validate([
-            'role' => 'required|string',
-        ]);
-        
-        $user = auth()->user();
-        $user->role = $request->role;
-        $user->save();
-        
-        return redirect()->back()->with('success', 'User role updated successfully.');
+        return $this->updateRole($request, $id);
     }
 
     /**
