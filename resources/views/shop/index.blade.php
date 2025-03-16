@@ -5,12 +5,41 @@
 @section('body')
     @include('layouts.flash-messages')
 
-    @foreach ($items->chunk(4) as $itemChunk)
+    <!-- Filter Form -->
+    <div class="container mb-4">
+        <form method="GET" action="{{ route('getItems') }}" class="row g-3">
+            <div class="col-md-3">
+                <label for="price_min" class="form-label">Price From:</label>
+                <input type="number" name="price_min" id="price_min" class="form-control" min="0" value="{{ request('price_min') }}">
+            </div>
+            <div class="col-md-3">
+                <label for="price_max" class="form-label">Price To:</label>
+                <input type="number" name="price_max" id="price_max" class="form-control" min="0" value="{{ request('price_max') }}">
+            </div>
+            <div class="col-md-3">
+                <label for="category" class="form-label">Category:</label>
+                <select name="category" id="category" class="form-select">
+                    <option value="">All Categories</option>
+                    <option value="Electronics" {{ request('category') == 'Electronics' ? 'selected' : '' }}>Electronics</option>
+                    <option value="Fashion" {{ request('category') == 'Fashion' ? 'selected' : '' }}>Fashion</option>
+                    <option value="Home" {{ request('category') == 'Home' ? 'selected' : '' }}>Home</option>
+                    <option value="Sports" {{ request('category') == 'Sports' ? 'selected' : '' }}>Sports</option>
+                    <option value="Books" {{ request('category') == 'Books' ? 'selected' : '' }}>Books</option>
+                </select>
+            </div>
+            <div class="col-md-3 align-self-end">
+                <button type="submit" class="btn btn-primary">Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Items Listing -->
+    @foreach ($items->chunk(3) as $itemChunk)
         <div class="row mb-4">
             @foreach ($itemChunk as $item)
                 <div class="col-sm-6 col-md-4 mb-3">
                     <div class="card h-100">
-                        <!-- Carousel -->
+                        <!-- Carousel for item images -->
                         <div id="carousel-{{ $item->item_id }}" class="carousel slide" data-bs-interval="0">
                             <div class="carousel-inner">
                                 @if($item->productImages && $item->productImages->count() > 0)
@@ -38,14 +67,14 @@
                         </div>
                         <!-- Card Body -->
                         <div class="card-body">
-                            <!-- Clickable item name triggers modal -->
+                            <!-- Clickable item name triggers modal pop-up -->
                             <h3 class="card-title">
                                 <a href="#" data-bs-toggle="modal" data-bs-target="#itemModal{{ $item->item_id }}" style="text-decoration: none;">
                                     {{ $item->name }}
                                 </a>
                             </h3>
                             <!-- Category displayed on a new line -->
-                            <p class="mb-2"><small class="text">{{ $item->category }}</small></p>
+                            <p class="mb-2"><small class="text-muted">{{ $item->category }}</small></p>
                             <p class="card-text">{{ Str::limit($item->description, 100) }}</p>
                             <h4 class="text-success">${{ $item->sell_price }}</h4>
                         </div>
@@ -61,7 +90,7 @@
         </div>
     @endforeach
 
-    {{-- Modals for each item --}}
+    <!-- Modals for each item (for full details & reviews) -->
     @foreach ($items as $item)
         <div class="modal fade" id="itemModal{{ $item->item_id }}" tabindex="-1" aria-labelledby="itemModalLabel{{ $item->item_id }}" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -72,9 +101,9 @@
                     </div>
                     <div class="modal-body">
                         <div class="row">
-                            <!-- Left: Carousel for images -->
+                            <!-- Left Column: Carousel for images in modal -->
                             <div class="col-md-6">
-                                <div id="modalCarousel{{ $item->item_id }}" class="carousel slide" data-bs-ride="carousel">
+                                <div id="modalCarousel{{ $item->item_id }}" class="carousel slide" data-bs-interval="0">
                                     <div class="carousel-inner">
                                         @if($item->productImages && $item->productImages->count() > 0)
                                             @foreach($item->productImages as $key => $img)
@@ -100,7 +129,7 @@
                                     @endif
                                 </div>
                             </div>
-                            <!-- Right: Full details and reviews -->
+                            <!-- Right Column: Full details and reviews -->
                             <div class="col-md-6">
                                 <p><strong>Category:</strong> {{ $item->category }}</p>
                                 <p><strong>Description:</strong> {{ $item->description }}</p>
@@ -127,7 +156,6 @@
             </div>
         </div>
     @endforeach
-
 @endsection
 
 @push('scripts')

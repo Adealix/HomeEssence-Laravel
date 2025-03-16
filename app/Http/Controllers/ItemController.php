@@ -66,7 +66,7 @@ class ItemController extends Controller
         
         // Validate required fields and multiple images (optional)
         $rules = [
-            'name'        => 'required|string|max:30',
+            'name'        => 'required|string|max:50',
             'description' => 'required|min:4|max:255',
             'category'    => 'required|string|max:30',
             'cost_price'  => 'required|numeric|min:0',
@@ -154,7 +154,7 @@ class ItemController extends Controller
         Log::debug('Update method accessed', ['id' => $id, 'request' => $request->all()]);
 
         $rules = [
-            'name'        => 'required|string|max:30',
+            'name'        => 'required|string|max:50',
             'description' => 'required|min:4|max:255',
             'category'    => 'required|string|max:30',
             'cost_price'  => 'required|numeric|min:0',
@@ -271,13 +271,44 @@ class ItemController extends Controller
     /**
      * Display items to customers (shop view).
      */
-    public function getItems()
-    {
-        Log::debug('getItems method accessed');
-        // Eager load stock and productImages relationships for each item
-        $items = Item::with(['stock', 'productImages'])->get();
-        return view('shop.index', compact('items'));
+    public function getItems(Request $request)
+{
+    Log::debug('getItems method accessed with filters', $request->all());
+    
+    $query = Item::with(['stock', 'productImages']);
+    
+    // Filter by category if provided
+    if ($request->filled('category')) {
+        $query->where('category', $request->category);
     }
+    
+    // Filter by price range
+    $priceMin = $request->input('price_min');
+    $priceMax = $request->input('price_max');
+    
+    // If only a minimum price is provided, filter items with sell_price >= priceMin
+    if ($priceMin !== null && is_numeric($priceMin)) {
+        $query->where('sell_price', '>=', floatval($priceMin));
+    }
+    
+    // If only a maximum price is provided, filter items with sell_price <= priceMax
+    if ($priceMax !== null && is_numeric($priceMax)) {
+        $query->where('sell_price', '<=', floatval($priceMax));
+    }
+    
+    // Optional: If both are provided, you might want to validate that priceMin is less than or equal to priceMax.
+    if ($priceMin !== null && $priceMax !== null && is_numeric($priceMin) && is_numeric($priceMax)) {
+        if (floatval($priceMin) > floatval($priceMax)) {
+            // Optionally, you could return an error message.
+            return redirect()->back()->with('error', 'Starting price must be less than or equal to the ending price.');
+        }
+    }
+    
+    $items = $query->get();
+    Log::debug('Filtered items count: ' . $items->count());
+    return view('shop.index', compact('items'));
+}
+
 
     public function addToCart($id)
     {
