@@ -29,7 +29,7 @@
                             <p>{{$order->sell_price}}</p>
                         </div>
                         <div class="col-4 col-lg-3 mt-4 mt-lg-0">
-                            <p> {{$order->quantity}}Piece(s)</p>
+                            <p> {{$order->quantity}} piece(s)</p>
                         </div>
                     </div>
                 </div>
@@ -42,7 +42,7 @@
                     <div class="form-group">
                         <label for="status">Example select</label>
                         <select class="form-control" id="status" name="status">
-                            <option value="processing">Processing</option>
+                            <option value="pending">Pending</option>
                             <option value="delivered">Delivered</option>
                             <option value="canceled">Canceled</option>
                         </select>

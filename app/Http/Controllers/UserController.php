@@ -22,28 +22,28 @@ class UserController extends Controller
      * Handle user registration.
      */
     public function register(Request $request)
-    {
-        $this->validate($request, [
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
+{
+    $this->validate($request, [
+        'name'     => 'required|string|max:255',
+        'email'    => 'required|string|email|max:255|unique:users',
+        'password' => 'required|string|min:8|confirmed',
+    ]);
 
-        // Create new user
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+    $user = User::create([
+        'name'     => $request->name,
+        'email'    => $request->email,
+        'password' => Hash::make($request->password),
+    ]);
 
-        // Optionally, you can trigger an event here
-        // event(new Registered($user));
+    // Send email verification
+    $user->sendEmailVerificationNotification();
 
-        Auth::login($user);
+    // Log in user
+    Auth::login($user);
 
-        // Redirect to the customer profile creation form (route name: customerprofile.create)
-        return redirect()->route('customerprofile.create');
-    }
+    // Redirect to email verification notice
+    return redirect()->route('verification.notice');
+}
 
     /**
      * Update user role and status.

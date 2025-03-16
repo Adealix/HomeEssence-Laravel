@@ -19,6 +19,8 @@ use Carbon\Carbon;
 use Auth;
 use Illuminate\Support\Facades\Log;
 use App\DataTables\ItemsDataTable;  // Import the DataTable class
+use App\Mail\SendOrderStatus;
+use Illuminate\Support\Facades\Mail;
 
 class ItemController extends Controller
 {
@@ -337,6 +339,7 @@ class ItemController extends Controller
                 Log::error('Customer not found for user id', ['user_id' => Auth::id()]);
                 return redirect()->route('getCart')->with('error', 'Customer not found.');
             }
+            Log::debug('Customer retrieved', ['customer' => $customer]);
             $order->customer_id = $customer->customer_id;
             $order->date_placed = now();
             $order->date_shipped = Carbon::now()->addDays(5);
@@ -365,16 +368,30 @@ class ItemController extends Controller
                     Log::debug('Stock updated', ['item_id' => $id, 'new_stock' => $stock->quantity]);
                 } else {
                     Log::error('Stock not found for item', ['item_id' => $id]);
+                    throw new \Exception('Stock not found for item ID: ' . $id);
                 }
             }
+            DB::commit();
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Exception thrown during checkout', ['error' => $e->getMessage()]);
             return redirect()->route('getCart')->with('error', $e->getMessage());
         }
-        DB::commit();
+        
+        // Send the order confirmation email
+        try {
+            Log::debug('Attempting to send order confirmation email', ['email' => $customer->email]);
+            Mail::to($customer->email)->send(new SendOrderStatus($order, $cart));
+            Log::debug('Order confirmation email sent', ['email' => $customer->email]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send order confirmation email', ['error' => $e->getMessage()]);
+            // Optionally, you could still continue even if email fails.
+            return redirect('/')->with('success', 'Order placed, but failed to send confirmation email.');
+        }
+        
         Session::forget('cart');
         Log::debug('Checkout process completed successfully');
         return redirect('/')->with('success', 'Successfully Purchased Your Products!!!');
     }
+    
 }

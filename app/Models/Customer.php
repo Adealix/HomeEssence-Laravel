@@ -30,6 +30,7 @@ class Customer extends Model implements Searchable
         'phone',
         'profile_picture',
         'user_id',
+        'email', // Ensure the email attribute is here
     ];
 
     /**

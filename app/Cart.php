@@ -4,58 +4,77 @@ namespace App;
 
 class Cart
 {
-    public $items = null;
+    public $items = [];
     public $totalQty = 0;
     public $totalPrice = 0;
-    public function __construct($oldCart)
+
+    public function __construct($oldCart = null)
     {
         if ($oldCart) {
-
             $this->items = $oldCart->items;
             $this->totalQty = $oldCart->totalQty;
             $this->totalPrice = $oldCart->totalPrice;
-            // dd($this->items);
         }
     }
 
     public function add($item, $id)
     {
-        // dd($this->items, $item, $id);
-        $storedItem = ['qty' => 0, 'price' => $item->sell_price, 'item' => $item];
-        // dd($storedItem, $this->items);
-        
-        if ($this->items) {
-            if (array_key_exists($id, $this->items)) {
-                $storedItem = $this->items[$id];
-            }
+        // If the item is not already in the cart, initialize its stored data.
+        if (!isset($this->items[$id])) {
+            $this->items[$id] = [
+                'qty'   => 0,
+                'price' => 0,
+                'item'  => $item
+            ];
         }
-        // dd($storedItem);
-        //$storedItem['qty'] += $item->qty;
-        $storedItem['qty']++;
-        $storedItem['price'] = $item->sell_price * $storedItem['qty'];
-        $this->items[$id] = $storedItem;
-        $this->totalQty++;
-        $this->totalPrice += $storedItem['price'];
-        // dd($this);
 
+        // Increase the quantity
+        $this->items[$id]['qty']++;
+
+        // Recalculate the price for this item (quantity * sell price)
+        $this->items[$id]['price'] = $this->items[$id]['qty'] * $item->sell_price;
+
+        // Recalculate totals for the cart
+        $this->recalcTotals();
     }
 
     public function reduceByOne($id)
     {
-        $this->items[$id]['qty']--;
-        $this->items[$id]['price'] -= $this->items[$id]['item']['sell_price'];
-        $this->totalQty--;
-        $this->totalPrice -= $this->items[$id]['item']['sell_price'] * $this->items[$id]['qty'];
-        if ($this->items[$id]['qty'] <= 0) {
-            unset($this->items[$id]);
+        if (isset($this->items[$id])) {
+            // Decrease the quantity
+            $this->items[$id]['qty']--;
+
+            // Recalculate the item's total price
+            $this->items[$id]['price'] = $this->items[$id]['qty'] * $this->items[$id]['item']->sell_price;
+
+            // Remove the item if quantity drops to zero or less
+            if ($this->items[$id]['qty'] <= 0) {
+                unset($this->items[$id]);
+            }
+
+            // Recalculate totals for the cart
+            $this->recalcTotals();
         }
     }
 
     public function removeItem($id)
     {
-        //dd($this->items);
-        $this->totalQty -= $this->items[$id]['qty'];
-        $this->totalPrice -= $this->items[$id]['price'];
-        unset($this->items[$id]);
+        if (isset($this->items[$id])) {
+            unset($this->items[$id]);
+            $this->recalcTotals();
+        }
+    }
+
+    /**
+     * Recalculate the total quantity and total price from the current items.
+     */
+    private function recalcTotals()
+    {
+        $this->totalQty = 0;
+        $this->totalPrice = 0;
+        foreach ($this->items as $storedItem) {
+            $this->totalQty += $storedItem['qty'];
+            $this->totalPrice += $storedItem['price'];
+        }
     }
 }

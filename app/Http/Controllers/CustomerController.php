@@ -39,7 +39,7 @@ class CustomerController extends Controller
             'town'            => 'nullable|string|max:32',
             'zipcode'         => 'nullable|string|max:10',
             'phone'           => 'nullable|string|max:16',
-            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ]);
 
         // Process the profile picture
@@ -65,7 +65,14 @@ class CustomerController extends Controller
             'profile_picture' => $profilePicture,
         ]);
 
-        return redirect()->route('home')->with('success', 'Profile created successfully.');
+        // Redirect based on email verification status:
+        if (!Auth::user()->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice')
+                ->with('success', 'Profile created successfully. Please verify your email before accessing the home page.');
+        } else {
+            return redirect()->route('home')
+                ->with('success', 'Profile created successfully.');
+        }
     }
 
     /**
@@ -132,6 +139,7 @@ class CustomerController extends Controller
             'profile_picture' => $profilePicture,
         ]);
 
+        // After updating, redirect to home (or any page of your choice)
         return redirect('/')->with('success', 'Profile updated successfully.');
     }
 

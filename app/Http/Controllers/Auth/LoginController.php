@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request; // Make sure this is the correct Request class
+use Illuminate\Http\Request; // Ensure this is the correct Request class
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Validation\ValidationException;
 use App\Models\User;
@@ -59,5 +59,23 @@ class LoginController extends Controller
         throw ValidationException::withMessages([
             $this->username() => [trans('auth.failed')],
         ]);
+    }
+
+    /**
+     * Override the authenticated method to ensure only verified users stay logged in.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param mixed $user
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    protected function authenticated(Request $request, $user)
+    {
+        if (!$user->hasVerifiedEmail()) {
+            auth()->logout();
+            throw ValidationException::withMessages([
+                $this->username() => ['Your email address is not verified. Please check your email for the verification link.'],
+            ]);
+        }
     }
 }
