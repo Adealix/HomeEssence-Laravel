@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Searchable\Searchable;
 use Spatie\Searchable\SearchResult;
+use Laravel\Scout\Searchable as ScoutSearchable; // Added for Laravel Scout integration
 
 class Item extends Model implements Searchable
 {
     use HasFactory;
+    use ScoutSearchable; // Added for Laravel Scout integration
 
     protected $table = 'item';
     protected $primaryKey = 'item_id';
@@ -43,18 +45,17 @@ class Item extends Model implements Searchable
     }
 
     /**
- * Get the reviews for the item.
- */
-public function reviews()
-{
-    return $this->hasMany(\App\Models\Review::class, 'item_id', 'item_id');
-}
+     * Get the reviews for the item.
+     */
+    public function reviews()
+    {
+        return $this->hasMany(\App\Models\Review::class, 'item_id', 'item_id');
+    }
 
-public function getRouteKeyName()
-{
-    return 'item_id';
-}
-
+    public function getRouteKeyName()
+    {
+        return 'item_id';
+    }
 
     /**
      * Get the orders associated with the item via the pivot table "orderline".

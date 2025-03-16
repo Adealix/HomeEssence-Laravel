@@ -128,3 +128,8 @@ Route::middleware('auth')->group(function () {
     // Display items that the user can review
     Route::get('/reviewable-items', [ReviewController::class, 'reviewableItems'])->name('reviews.reviewable_items');
 });
+
+Route::get('/search/like', [SearchController::class, 'searchLike'])->name('search.like');
+Route::get('/search/model', [SearchController::class, 'searchModel'])->name('search.model');
+Route::get('/search/scout', [SearchController::class, 'searchScout'])->name('search.scout');
+

@@ -6,11 +6,13 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "algolia/algoliasearch-client-php": "^4.16",
         "barryvdh/laravel-dompdf": "^3.1",
         "consoletvs/charts": "^6.8",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^10.0",
         "laravel/sanctum": "^3.2",
+        "laravel/scout": "^10.13",
         "laravel/tinker": "^2.8",
         "laravel/ui": "^4.6",
         "laravelcollective/html": "^6.4",
