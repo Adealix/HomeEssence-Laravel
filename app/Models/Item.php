@@ -43,6 +43,35 @@ class Item extends Model implements Searchable
     }
 
     /**
+ * Get the reviews for the item.
+ */
+public function reviews()
+{
+    return $this->hasMany(\App\Models\Review::class, 'item_id', 'item_id');
+}
+
+public function getRouteKeyName()
+{
+    return 'item_id';
+}
+
+
+    /**
+     * Get the orders associated with the item via the pivot table "orderline".
+     */
+    public function orders()
+    {
+        return $this->belongsToMany(
+            \App\Models\Order::class,
+            'orderline',
+            'item_id',
+            'orderinfo_id',
+            'item_id',
+            'orderinfo_id'
+        );
+    }
+
+    /**
      * Get the search result for the item.
      */
     public function getSearchResult(): SearchResult

@@ -18,11 +18,16 @@
                     @endif
                         @csrf
 
-                        <!-- Title Field -->
+                        <!-- Title Field as Dropdown -->
                         <div class="row mb-3">
                             <label for="title" class="col-md-4 col-form-label text-md-end">{{ __('Title') }}</label>
                             <div class="col-md-6">
-                                <input id="title" type="text" class="form-control @error('title') is-invalid @enderror" name="title" value="{{ old('title', isset($customer) ? $customer->title : '') }}">
+                                <select id="title" name="title" class="form-control @error('title') is-invalid @enderror">
+                                    <option value="">{{ __('Select Title') }}</option>
+                                    <option value="Mr." {{ old('title', isset($customer) ? $customer->title : '') == 'Mr.' ? 'selected' : '' }}>Mr.</option>
+                                    <option value="Ms." {{ old('title', isset($customer) ? $customer->title : '') == 'Ms.' ? 'selected' : '' }}>Ms.</option>
+                                    <option value="Mrs." {{ old('title', isset($customer) ? $customer->title : '') == 'Mrs.' ? 'selected' : '' }}>Mrs.</option>
+                                </select>
                                 @error('title')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
@@ -83,7 +88,7 @@
                             </div>
                         </div>
 
-                        <!-- Zipcode Field -->
+                        <!-- Zipcode Field (4 digits only) -->
                         <div class="row mb-3">
                             <label for="zipcode" class="col-md-4 col-form-label text-md-end">{{ __('Zipcode') }}</label>
                             <div class="col-md-6">
@@ -96,7 +101,7 @@
                             </div>
                         </div>
 
-                        <!-- Phone Field -->
+                        <!-- Phone Field (8 to 12 digits only) -->
                         <div class="row mb-3">
                             <label for="phone" class="col-md-4 col-form-label text-md-end">{{ __('Phone') }}</label>
                             <div class="col-md-6">

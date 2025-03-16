@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Models\Item;
+use App\Models\Review;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardController;
@@ -9,6 +11,15 @@ use App\Http\Controllers\CustomerProfileController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ReviewController;
+
+// Route model binding for "item" and "review"
+Route::bind('item', function ($value) {
+    return Item::where('item_id', $value)->first() ?? abort(404);
+});
+
+Route::bind('review', function ($value) {
+    return Review::where('review_id', $value)->first() ?? abort(404);
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -100,20 +111,20 @@ Route::get('/customers/{customer}', [CustomerController::class, 'show'])
 Route::delete('items/{item_id}/images/{image_id}', [\App\Http\Controllers\ItemController::class, 'destroyImage'])
     ->name('items.images.destroy');
 
-// Routes for product reviews (only for authenticated users)
+// Routes for item reviews (only for authenticated users)
 Route::middleware('auth')->group(function () {
-    // Store a new review for a product
-    Route::post('/products/{product}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    // Store a new review for an item
+    Route::post('/items/{item}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     
-    // Update an existing review for a product
-    Route::put('/products/{product}/reviews/{review}', [ReviewController::class, 'update'])->name('reviews.update');
+    // Update an existing review for an item
+    Route::put('/items/{item}/reviews/{review}', [ReviewController::class, 'update'])->name('reviews.update');
     
     // Delete a review (user or admin)
-    Route::delete('/products/{product}/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
+    Route::delete('/items/{item}/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
     
-    // Display reviews for a product
-    Route::get('/products/{product}/reviews', [ReviewController::class, 'index'])->name('reviews.index');
+    // Display reviews for an item
+    Route::get('/items/{item}/reviews', [ReviewController::class, 'index'])->name('reviews.index');
 
-    // Display products that the user can review
-    Route::get('/reviewable-products', [ReviewController::class, 'reviewableProducts'])->name('reviews.reviewable_products');
+    // Display items that the user can review
+    Route::get('/reviewable-items', [ReviewController::class, 'reviewableItems'])->name('reviews.reviewable_items');
 });

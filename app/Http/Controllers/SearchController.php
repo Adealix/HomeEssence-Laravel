@@ -11,13 +11,21 @@ class SearchController extends Controller
 {
     public function search(Request $request)
     {
-        // dd($request->term);
-        $searchResults = (new Search())
-            ->registerModel(Customer::class, 'lname', 'fname', 'addressline')
-            ->registerModel(Item::class, 'description')
-            ->search(trim($request->term));
+        // Validate that a search term is provided and is not too long.
+        $request->validate([
+            'term' => 'required|string|max:255',
+        ]);
 
-            // dd($searchResults);
-            return view('search', compact('searchResults'));
+        // Trim any extra spaces from the term.
+        $term = trim($request->term);
+
+        // Perform the search by registering the models and their searchable fields.
+        $searchResults = (new Search())
+            ->registerModel(Item::class, 'name', 'description', 'category')
+            ->registerModel(Customer::class, 'title', 'fname', 'lname', 'addressline', 'town', 'zipcode')
+            ->search($term);
+
+        // Return the search view with the search results.
+        return view('search', compact('searchResults'));
     }
 }

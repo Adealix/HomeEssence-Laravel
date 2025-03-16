@@ -1,8 +1,21 @@
 @extends('layouts.base')
 
-@section('content')
+@section('body')
 <div class="container my-5">
-    <h2>Reviews for: {{ $product->name }}</h2>
+    <!-- Flash messages for success or error -->
+    @if(session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    <h2>Reviews for: {{ $item->name }}</h2>
     
     {{-- List all reviews --}}
     <div class="reviews-list mb-4">
@@ -24,18 +37,29 @@
                 </div>
             @endforeach
         @else
-            <p>No reviews yet. Be the first to review this product.</p>
+            <p>No reviews yet. Be the first to review this item.</p>
         @endif
     </div>
+    
+    {{-- Display validation errors if any --}}
+    @if ($errors->any())
+      <div class="alert alert-danger">
+          <ul class="mb-0">
+              @foreach ($errors->all() as $error)
+                  <li>{{ $error }}</li>
+              @endforeach
+          </ul>
+      </div>
+    @endif
 
     {{-- Review form for the logged-in user --}}
     <div class="review-form">
         <h3>{{ isset($review) ? 'Edit Your Review' : 'Write a Review' }}</h3>
         @if(isset($review))
-            <form action="{{ route('reviews.update', ['product' => $product->id, 'review' => $review->id]) }}" method="POST">
+            <form action="{{ route('reviews.update', ['item' => $item->item_id, 'review' => $review->review_id]) }}" method="POST">
                 @method('PUT')
         @else
-            <form action="{{ route('reviews.store', ['product' => $product->id]) }}" method="POST">
+            <form action="{{ route('reviews.store', ['item' => $item->item_id]) }}" method="POST">
         @endif
             @csrf
             <div class="mb-3">
@@ -59,7 +83,7 @@
 
         {{-- If a review exists, show a delete button --}}
         @if(isset($review))
-            <form action="{{ route('reviews.destroy', ['product' => $product->id, 'review' => $review->id]) }}" method="POST" class="mt-3" onsubmit="return confirm('Are you sure you want to delete your review?');">
+            <form action="{{ route('reviews.destroy', ['item' => $item->item_id, 'review' => $review->review_id]) }}" method="POST" class="mt-3" onsubmit="return confirm('Are you sure you want to delete your review?');">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-danger">Delete Review</button>

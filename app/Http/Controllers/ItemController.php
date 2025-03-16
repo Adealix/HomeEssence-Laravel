@@ -21,9 +21,20 @@ use Illuminate\Support\Facades\Log;
 use App\DataTables\ItemsDataTable;  // Import the DataTable class
 use App\Mail\SendOrderStatus;
 use Illuminate\Support\Facades\Mail;
+use Barryvdh\DomPDF\Facade\Pdf as PDF; // Updated import for laravel-dompdf
 
 class ItemController extends Controller
 {
+    /**
+     * Constructor to restrict admin-only methods.
+     */
+    public function __construct()
+    {
+        $this->middleware(['auth', 'verified', 'admin'])->only([
+            'create', 'store', 'edit', 'update', 'destroy', 'destroyImage', 'import'
+        ]);
+    }
+
     /**
      * Display a listing of the resource for admin using DataTables.
      */
@@ -55,9 +66,9 @@ class ItemController extends Controller
         
         // Validate required fields and multiple images (optional)
         $rules = [
-            'name'        => 'required|string|max:255',
-            'description' => 'required|min:4',
-            'category'    => 'required|string|max:100',
+            'name'        => 'required|string|max:30',
+            'description' => 'required|min:4|max:255',
+            'category'    => 'required|string|max:30',
             'cost_price'  => 'required|numeric|min:0',
             'sell_price'  => 'required|numeric|min:0',
             'qty'         => 'required|integer|min:0',
@@ -143,9 +154,9 @@ class ItemController extends Controller
         Log::debug('Update method accessed', ['id' => $id, 'request' => $request->all()]);
 
         $rules = [
-            'name'        => 'required|string|max:255',
-            'description' => 'required|min:4',
-            'category'    => 'required|string|max:100',
+            'name'        => 'required|string|max:30',
+            'description' => 'required|min:4|max:255',
+            'category'    => 'required|string|max:30',
             'cost_price'  => 'required|numeric|min:0',
             'sell_price'  => 'required|numeric|min:0',
             'quantity'    => 'required|integer|min:0',
@@ -381,17 +392,19 @@ class ItemController extends Controller
         // Send the order confirmation email
         try {
             Log::debug('Attempting to send order confirmation email', ['email' => $customer->email]);
-            Mail::to($customer->email)->send(new SendOrderStatus($order, $cart));
+            // Generate PDF receipt content using laravel-dompdf directly.
+            // Note: Ensure your view file is located at resources/views/email/order_status.blade.php
+            $pdf = PDF::loadView('email.order_status', ['order' => $order, 'cart' => $cart])->output();
+            // Pass false as the second parameter (not an update), the PDF content, and the cart object.
+            Mail::to($customer->email)->send(new SendOrderStatus($order, false, $pdf, $cart));
             Log::debug('Order confirmation email sent', ['email' => $customer->email]);
         } catch (\Exception $e) {
             Log::error('Failed to send order confirmation email', ['error' => $e->getMessage()]);
-            // Optionally, you could still continue even if email fails.
             return redirect('/')->with('success', 'Order placed, but failed to send confirmation email.');
         }
         
         Session::forget('cart');
         Log::debug('Checkout process completed successfully');
-        return redirect('/')->with('success', 'Successfully Purchased Your Products!!!');
-    }
-    
+        return redirect('/')->with('success', 'Successfully Purchased Your Products! An Email of your order has been sent to you.');
+    }    
 }

@@ -3,6 +3,18 @@
 @section('body')
     <div class="container-md">
         @include('layouts.flash-messages')
+        
+        @php
+            // Define available category options.
+            $categories = [
+                'Electronics' => 'Option 1',
+                'Fashion' => 'Fashion',
+                'Home' => 'Home',
+                'Sports' => 'Sports',
+                'Books' => 'Books'
+            ];
+        @endphp
+
         {!! Form::open(['route' => 'items.store', 'files' => true]) !!}
         
         {{-- New: Item Name --}}
@@ -19,9 +31,9 @@
             <div class="alert alert-danger">{{ $message }}</div>
         @enderror
 
-        {{-- New: Category --}}
+        {{-- New: Category as Dropdown --}}
         {!! Form::label('category', 'Category', ['class' => 'form-label']) !!}
-        {!! Form::text('category', null, ['class' => 'form-control', 'id' => 'category']) !!}
+        {!! Form::select('category', $categories, null, ['class' => 'form-control', 'id' => 'category', 'placeholder' => 'Select Category']) !!}
         @error('category')
             <div class="alert alert-danger">{{ $message }}</div>
         @enderror

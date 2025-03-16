@@ -31,14 +31,17 @@ class CustomerController extends Controller
      */
     public function store(Request $request)
     {
+        // Enhanced validation rules:
         $request->validate([
-            'title'           => 'nullable|string|max:4',
+            'title'           => 'nullable|in:Mr.,Ms.,Mrs.',
             'fname'           => 'nullable|string|max:32',
             'lname'           => 'required|string|max:32',
             'addressline'     => 'nullable|string',
             'town'            => 'nullable|string|max:32',
-            'zipcode'         => 'nullable|string|max:10',
-            'phone'           => 'nullable|string|max:16',
+            // Only allow exactly 4 digits for zipcode if provided
+            'zipcode'         => 'nullable|max:5',
+            // Phone must be numeric and between 8 and 12 digits
+            'phone'           => 'nullable|digits_between:8,12',
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ]);
 
@@ -104,13 +107,13 @@ class CustomerController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'title'           => 'nullable|string|max:4',
+            'title'           => 'nullable|in:Mr.,Ms.,Mrs.',
             'fname'           => 'nullable|string|max:32',
             'lname'           => 'required|string|max:32',
             'addressline'     => 'nullable|string',
             'town'            => 'nullable|string|max:32',
-            'zipcode'         => 'nullable|string|max:10',
-            'phone'           => 'nullable|string|max:16',
+            'zipcode'         => 'nullable|digits:4',
+            'phone'           => 'nullable|digits_between:8,12',
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ]);
 
@@ -139,7 +142,6 @@ class CustomerController extends Controller
             'profile_picture' => $profilePicture,
         ]);
 
-        // After updating, redirect to home (or any page of your choice)
         return redirect('/')->with('success', 'Profile updated successfully.');
     }
 

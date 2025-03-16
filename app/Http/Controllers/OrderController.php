@@ -38,11 +38,14 @@ class OrderController extends Controller
         Log::debug('Customer retrieved', ['customer' => $customer]);
         
         // Get order items, fetching the first image from product_images for each item.
+        // Updated query: select additional columns i.name and i.category.
         $orders = DB::table('customer as c')
             ->join('orderinfo as o', 'o.customer_id', '=', 'c.customer_id')
             ->join('orderline as ol', 'o.orderinfo_id', '=', 'ol.orderinfo_id')
             ->join('item as i', 'ol.item_id', '=', 'i.item_id')
             ->select(
+                'i.name',        // Added for item name
+                'i.category',    // Added for item category
                 'i.description',
                 'ol.quantity',
                 DB::raw("(select image_path from product_images where product_images.item_id = i.item_id limit 1) as image"),
@@ -73,19 +76,19 @@ class OrderController extends Controller
     public function orderUpdate(Request $request, $id)
     {
         Log::debug('orderUpdate method entered', ['orderinfo_id' => $id, 'request' => $request->all()]);
-        
+            
         // Validate the status input
         $request->validate([
             'status' => 'required|in:pending,delivered,canceled',
         ]);
-
+    
         try {
             // Start transaction
             DB::beginTransaction();
-            
+                
             // Retrieve the order using Eloquent
             $order = Order::findOrFail($id);
-            
+                
             // Update the order status; if delivered, set date_shipped; if not, clear it.
             $order->status = $request->status;
             if ($request->status === 'delivered') {
@@ -95,17 +98,17 @@ class OrderController extends Controller
             }
             $order->save();
             Log::debug('Order updated', ['order' => $order]);
-            
+                
             DB::commit();
-
+    
             // Reload the order with its customer, user, and orderlines (with associated items)
             $order->load('customer.user', 'orderlines.item');
-
+    
             if (!$order->customer || !$order->customer->user || !$order->customer->user->email) {
                 Log::error('Customer email not found for order update', ['order_id' => $order->orderinfo_id]);
                 return redirect()->route('admin.orders')->with('error', 'Customer email not found.');
             }
-            
+                
             // Generate a PDF receipt.
             // We pass no cart (null) here so that the PDF view uses orderlines data.
             $pdf = PDF::loadView('pdf.receipt', [
@@ -118,12 +121,13 @@ class OrderController extends Controller
                     2
                 ),
             ])->output();
-
+    
             // Send the order status update email with the PDF attached.
+            // Pass null for the cart, since an update email doesn't require it.
             Mail::to($order->customer->user->email)
-                ->send(new SendOrderStatus($order, true, $pdf)); // Pass true for update email
+                ->send(new SendOrderStatus($order, true, $pdf, null));
             Log::debug('Order status email sent', ['email' => $order->customer->user->email]);
-            
+                
             return redirect()->route('admin.orders')->with('success', 'Order updated successfully and notification email sent.');
         } catch (Exception $e) {
             DB::rollback();
@@ -131,4 +135,5 @@ class OrderController extends Controller
             return redirect()->route('admin.orders')->with('error', 'Failed to update order: ' . $e->getMessage());
         }
     }
+    
 }

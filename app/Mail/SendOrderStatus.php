@@ -9,7 +9,6 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Order;
-use PDF; // Use the alias for the PDF facade
 
 class SendOrderStatus extends Mailable
 {
@@ -18,6 +17,7 @@ class SendOrderStatus extends Mailable
     public $order;
     public $isUpdate;
     public $pdf;
+    public $cart;  // Added property for the cart
 
     /**
      * Create a new message instance.
@@ -25,12 +25,14 @@ class SendOrderStatus extends Mailable
      * @param Order $order
      * @param bool $isUpdate  Indicates whether this is an update email.
      * @param string $pdf  The PDF content.
+     * @param mixed $cart  The cart object.
      */
-    public function __construct(Order $order, bool $isUpdate = false, string $pdf)
+    public function __construct(Order $order, bool $isUpdate = false, string $pdf, $cart)
     {
         $this->order = $order;
         $this->isUpdate = $isUpdate;
         $this->pdf = $pdf;
+        $this->cart = $cart;
     }
 
     /**
@@ -40,10 +42,7 @@ class SendOrderStatus extends Mailable
      */
     public function envelope(): Envelope
     {
-        // Retrieve the customer's email; if not set, fall back to the related user’s email.
         $customerEmail = $this->order->customer->email ?: $this->order->customer->user->email;
-
-        // Set subject based on whether this is an update or a new confirmation.
         $subject = $this->isUpdate ? 'Order Update' : 'Order Confirmation';
 
         return new Envelope(
@@ -67,6 +66,7 @@ class SendOrderStatus extends Mailable
             with: [
                 'order'    => $this->order,
                 'isUpdate' => $this->isUpdate,
+                'cart'     => $this->cart, // Pass the cart to the view
             ]
         );
     }
